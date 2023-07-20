@@ -1,0 +1,8 @@
+/data
+/saved_model
+/finetune_log
+/model_01
+**/__pycache__
+*/__pycache__
+/__pycache__
+/.idea

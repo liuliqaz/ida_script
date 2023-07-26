@@ -1,7 +1,8 @@
 /data
-/saved_model
-/finetune_log
-/model_01
+/dataset
+/extract
+/log
+/idb
 **/__pycache__
 */__pycache__
 /__pycache__

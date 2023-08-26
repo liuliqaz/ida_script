@@ -3,6 +3,7 @@
 /extract
 /log
 /idb
+/idb_t
 **/__pycache__
 */__pycache__
 /__pycache__

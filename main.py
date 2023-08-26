@@ -1,16 +1,7 @@
-# This is a sample Python script.
+import pickle
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    with open('./extract/a2ps-4.14_clang-7.0_mips_64_Ofast_fixnt_extract2.pkl', 'rb') as f:
+        pkl = pickle.load(f)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    print('helo')

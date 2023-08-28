@@ -265,6 +265,7 @@ class BinaryData(Binarybase):
 
         output_dict = dict()
         output_dict[file_name] = dict()
+        output_dict[file_name]['func_dict'] = dict()
         output_dict[file_name]['arch'] = convert_procname_to_str(procname, bitness)
         for fva in idautils.Functions():
             try:
@@ -330,7 +331,7 @@ class BinaryData(Binarybase):
                     # 'adj_matrix': json.dumps(adj_matrix.tolist())
                     'netx': nx_graph
                 }
-                output_dict[file_name][hex(fva)] = func_dict
+                output_dict[file_name]['func_dict'][hex(fva)] = func_dict
                     
             except Exception as e:
                 print("[!] Exception: skipping function fva: %d" % fva)

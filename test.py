@@ -29,9 +29,9 @@ if __name__ == '__main__':
     # with open(file_x86_2, 'rb') as f:
     #     pkl_x86_2 = pickle.load(f)
 
-    s = 'sub esp, 8'
+    s = 'sub esp, -8'
     reg = r'([-]?[0-9]+)'
-    match_const_dec = re.match(reg, s, re.M | re.I)
+    match_const_dec = re.findall(reg, s, re.M | re.I)
     if match_const_dec:
         print('??')
 

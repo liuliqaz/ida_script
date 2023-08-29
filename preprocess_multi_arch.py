@@ -2,6 +2,7 @@ import argparse
 import pickle
 import os
 import re
+from tqdm import tqdm
 
 
 arm_branch_opcode = ['beq', 'bne', 'bcs', 'bcc', 'bmi', 'bpl', 
@@ -16,6 +17,13 @@ mips_branch_opcode = ['j', 'jr', 'b',
                       'bltzal', 'bgezal']
 
 
+def is_hexadecimal(s):
+    try:
+        int(s, 16)
+        return True
+    except ValueError:
+        return False
+
 def load_pickle(file):
     with open(file, 'rb') as f:
         return pickle.load(f)
@@ -24,15 +32,14 @@ def load_pickle(file):
 def get_all_pkl_file(data_dir):
     proj_list = []
     for file_name in os.listdir(data_dir):
-        if not file_name.endswith(''):
+        if not file_name.endswith('pkl'):
             continue
         pickle_path = os.path.join(data_dir, file_name)
-        if os.path.isdir(pickle_path):
-            proj_list.append(file_name)
+        proj_list.append(pickle_path)
     return proj_list
 
 
-def process_asm_x86(basic_blocks, func_dict, dyn_func_list):
+def process_asm_x86(basic_blocks, func_dict, dyn_func_list, func_name):
     res_dict = dict()
     for block_addr, block_data in basic_blocks.items():
         block_asm_list = block_data['bb_disasm']
@@ -41,10 +48,10 @@ def process_asm_x86(basic_blocks, func_dict, dyn_func_list):
             ins_list = ins_str.split()
             opcode = ins_list[0]
             # step1 parse jmp ins and parse target addr into DEC 
-            if opcode[0] == 'j':
-                jmp_addr = ins_list[1]
+            if opcode[0] == 'j' and is_hexadecimal(ins_list[-1]):
+                jmp_addr = ins_list[-1]
                 jmp_addr_dec = int(jmp_addr, base=16)
-                res_block_asm_list.append(f'{opcode} {jmp_addr_dec}')
+                res_block_asm_list.append(f'{opcode} jp_{jmp_addr_dec}')
                 continue
             # step2 parse function call (stc_link, dyn_link, func)
             if 'call' in opcode:
@@ -74,7 +81,7 @@ def process_asm_x86(basic_blocks, func_dict, dyn_func_list):
     return res_dict
 
 
-def process_asm_arm(basic_blocks, func_dict, dyn_func_list):
+def process_asm_arm(basic_blocks, func_dict, dyn_func_list, func_name):
     res_dict = dict()
     for block_addr, block_data in basic_blocks.items():
         block_asm_list = block_data['bb_disasm']
@@ -83,10 +90,10 @@ def process_asm_arm(basic_blocks, func_dict, dyn_func_list):
             ins_list = ins_str.split()
             opcode = ins_list[0]
             # step1 parse brach instruction, in case  jump addr tokenized
-            if opcode[0] == 'b' and opcode != 'bl':
-                jmp_addr = ins_list[1]
+            if opcode[0] == 'b' and opcode != 'bl'and is_hexadecimal(ins_list[-1]):
+                jmp_addr = ins_list[-1]
                 jmp_addr_dec = int(jmp_addr, base=16)
-                res_block_asm_list.append(f'{opcode} {jmp_addr_dec}')
+                res_block_asm_list.append(f'{opcode} jp_{jmp_addr_dec}')
                 continue
             # step1 parse function call (stc_link, dyn_link, func)
             if opcode == 'bl':
@@ -116,7 +123,7 @@ def process_asm_arm(basic_blocks, func_dict, dyn_func_list):
     return res_dict
 
 
-def process_asm_mips(basic_blocks, func_dict, dyn_func_list):
+def process_asm_mips(basic_blocks, func_dict, dyn_func_list, func_name):
     res_dict = dict()
     for block_addr, block_data in basic_blocks.items():
         block_asm_list = block_data['bb_disasm']
@@ -125,11 +132,11 @@ def process_asm_mips(basic_blocks, func_dict, dyn_func_list):
             ins_list = ins_str.split()
             opcode = ins_list[0]
             # step1 parse brach instruction, for mips, some brach instructions have more than one oprand
-            if (opcode[0] == 'b' and opcode != 'bal') or (opcode == 'j'):
+            if ((opcode[0] == 'b' and opcode != 'bal') or (opcode == 'j')) and is_hexadecimal(ins_list[-1]):
                 jmp_addr = ins_list[-1]
                 jmp_addr_dec = int(jmp_addr, base=16)
                 new_ins_list = [i for i in ins_list]
-                new_ins_list[-1] = str(jmp_addr_dec)
+                new_ins_list[-1] = 'jp_' + str(jmp_addr_dec)
                 res_block_asm_list.append(' '.join(new_ins_list))
                 continue
             # step2 parse function call (stc_link, dyn_link, func)
@@ -165,6 +172,8 @@ def process_asm_mips(basic_blocks, func_dict, dyn_func_list):
 
 
 def gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list):
+    func_map = dict()
+    edge_pair_list = []
     for func_addr, func_data in func_dict.items():
         func_name = func_data['name']
         edge_list = func_data['edges']
@@ -176,33 +185,80 @@ def gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list):
         
         # step1 parse asm ins to token type
         if 'x86' in arch:
-            asm_dict = process_asm_x86(basic_blocks, func_dict, dyn_func_list)
+            asm_dict = process_asm_x86(basic_blocks, func_dict, dyn_func_list, func_name)
         elif 'arm' in arch:
-            asm_dict = process_asm_arm(basic_blocks, func_dict, dyn_func_list)
+            asm_dict = process_asm_arm(basic_blocks, func_dict, dyn_func_list, func_name)
         elif 'mips' in arch:
-           asm_dict = process_asm_mips(basic_blocks, func_dict, dyn_func_list)
+           asm_dict = process_asm_mips(basic_blocks, func_dict, dyn_func_list, func_name)
         else:
             print(f'[error] unknown arch: {arch}')
             return
         
+        print('done')
         # step2 transfer asm blocks into pairs
+        for edge in edge_list:
+            pred = asm_dict[edge[0]]
+            succ = asm_dict[edge[1]]
+            
+            if 'mips' in arch and len(pred) > 1:
+                jmp_ins = pred[-2]
+            else:
+                jmp_ins = pred[-1]
+            jmp_ins_list = jmp_ins.split()
+            jmp_op = jmp_ins_list[0]
+
+            jp_pattern = r'jp_([0-9]*)'
+            match_jump_id = re.search(jp_pattern, jmp_ins, re.I)
+            if match_jump_id:
+                jump_addr = int(match_jump_id.group(1))
+                if jump_addr == edge[1]:
+                    rela_token = f'[t_{jmp_op}]'
+                else:
+                    rela_token = f'[f_{jmp_op}]'
+            else:
+                rela_token = '[seq]'
+            edge_pair_str = ' '.join(pred) + '\t' + rela_token + '\t' + ' '.join(succ) + '\n'
+            edge_pair_str = re.sub(r'jp_[0-9]*', 'jump_addr', edge_pair_str)
+            edge_pair_list.append(edge_pair_str)
+
         
-    pass
+        if func_name in func_map:
+            func_map[func_name].append(func_addr)
+        else:
+            func_map[func_name] = [func_addr]
+        func_dict[func_addr]['asm_dict'] = asm_dict
+    
+    # save processed asm code and pairs
+    # with open()
+        
+    return func_map, edge_pair_list
 
 
-def process_all_pkl(data_dir):
+def process_all_pkl(data_dir, target_pairs_file):
     pkl_file_list = get_all_pkl_file(data_dir)
 
     pkl_file_len = len(pkl_file_list)
 
-    for file in pkl_file_list:
-        binary_name = '_'.join(file.split('_')[:-1])
+    for file in tqdm(pkl_file_list):
+        binary_name = '_'.join(file.split('/')[-1].split('_')[:-1])
         pickle_data = load_pickle(file)
         func_dict = pickle_data[binary_name]['func_dict']
         arch = pickle_data[binary_name]['arch']
         dyn_func_list = pickle_data[binary_name]['dyn_func_list']
+        
+        func_map, edge_pair_list = gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list)
 
-        gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list)
+        pickle_data[binary_name]['func_map'] = func_map
+
+        print('one')
+
+        # save pairs list
+        # if len(edge_pair_list) > 0:
+        #     with open(target_pairs_file, 'a+') as f:
+        #         f.writelines(edge_pair_list)
+        
+        # with open(file, 'wb') as f:
+        #     pickle.dump(pickle_data)
 
 
 def test_code():
@@ -232,4 +288,8 @@ if __name__ == '__main__':
     input_path = args.input_path
     output_path = args.output_path
 
-    test_code()
+    # test_code()
+
+    input_path = './extract'
+    output_path = 'xx'
+    process_all_pkl(input_path, output_path)

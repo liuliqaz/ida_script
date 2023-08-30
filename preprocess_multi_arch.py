@@ -19,6 +19,8 @@ mips_branch_opcode = ['j', 'jr', 'b',
 
 def is_hexadecimal(s):
     try:
+        if s[0] == '#':
+            s = s[1:]
         int(s, 16)
         return True
     except ValueError:
@@ -92,7 +94,7 @@ def process_asm_arm(basic_blocks, func_dict, dyn_func_list, func_name):
             # step1 parse brach instruction, in case  jump addr tokenized
             if opcode[0] == 'b' and opcode != 'bl'and is_hexadecimal(ins_list[-1]):
                 jmp_addr = ins_list[-1]
-                jmp_addr_dec = int(jmp_addr, base=16)
+                jmp_addr_dec = int(jmp_addr[1:], base=16)
                 res_block_asm_list.append(f'{opcode} jp_{jmp_addr_dec}')
                 continue
             # step1 parse function call (stc_link, dyn_link, func)
@@ -194,7 +196,6 @@ def gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list):
             print(f'[error] unknown arch: {arch}')
             return
         
-        print('done')
         # step2 transfer asm blocks into pairs
         for edge in edge_list:
             pred = asm_dict[edge[0]]
@@ -250,15 +251,13 @@ def process_all_pkl(data_dir, target_pairs_file):
 
         pickle_data[binary_name]['func_map'] = func_map
 
-        print('one')
-
         # save pairs list
-        # if len(edge_pair_list) > 0:
-        #     with open(target_pairs_file, 'a+') as f:
-        #         f.writelines(edge_pair_list)
+        if len(edge_pair_list) > 0:
+            with open(target_pairs_file, 'a+') as f:
+                f.writelines(edge_pair_list)
         
         # with open(file, 'wb') as f:
-        #     pickle.dump(pickle_data)
+        #     pickle.dump(pickle_data, f)
 
 
 def test_code():
@@ -267,7 +266,7 @@ def test_code():
     file_x86_2 = './extract/a2ps-4.14_clang-7.0_x86_32_O0_a2ps_extract2.pkl' # x86
     file_mips_2 = './extract/nettle-3.8.1_gcc-8.2.0_mips_64_O1_nettle-hash_extract2.pkl' # mips
 
-    file = file_mips_2
+    file = file_arm_2
     file_name = file.split('/')[-1]
     binary_name = '_'.join(file_name.split('_')[:-1])
     pickle_data = load_pickle(file)
@@ -275,7 +274,9 @@ def test_code():
     arch = pickle_data[binary_name]['arch']
     dyn_func_list = pickle_data[binary_name]['dyn_func_list']
 
-    gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list)
+    func_map, edge_pair_list = gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list)
+
+    print("done")
 
 
 
@@ -291,5 +292,5 @@ if __name__ == '__main__':
     # test_code()
 
     input_path = './extract'
-    output_path = 'xx'
+    output_path = './test_pairs.txt'
     process_all_pkl(input_path, output_path)

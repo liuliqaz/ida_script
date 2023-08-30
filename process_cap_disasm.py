@@ -13,7 +13,7 @@ import base64
 import json
 
 # DATAROOT = "/home/liu/project/ida_script/dataset/"
-DATAROOT = "./dataset/"
+DATAROOT = "./data/"
 # SAVEROOT = "/home/liu/project/ida_script/extract/"
 SAVEROOT = "./extract/"
 
@@ -352,7 +352,8 @@ if __name__ == '__main__':
 
     binary_abs_path = idc.get_input_file_path()
     file_name = binary_abs_path.split('\\')[-1]
-    file_path = os.path.join(DATAROOT, file_name)
+    proj_name = file_name.split('-')[0]
+    file_path = os.path.join(DATAROOT, proj_name, file_name)
     idc.auto_wait()
 
     print(f'[DATAROOT]{DATAROOT}')

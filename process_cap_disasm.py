@@ -12,10 +12,10 @@ import base64
 # import numpy as np
 import json
 
-# DATAROOT = "/home/liu/project/ida_script/dataset/"
-DATAROOT = "./data/"
+# DATAROOT = "/home/liu/project/ida_script/data/"
+DATAROOT = "/home/liu/bcsd/train_set/"
 # SAVEROOT = "/home/liu/project/ida_script/extract/"
-SAVEROOT = "./extract/"
+SAVEROOT = "/home/liu/bcsd/train_set_extract/"
 
 
 BasicBlock = namedtuple('BasicBlock', ['va', 'size', 'succs', 'preds'])

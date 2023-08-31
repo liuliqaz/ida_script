@@ -15,7 +15,7 @@ mips_branch_opcode = ['j', 'jr', 'b',
                       'ble', 'bleu', 'blez'
                       'blt', 'bltu', 'bltz',
                       'bltzal', 'bgezal']
-
+missed_ams_count = 0
 
 def is_hexadecimal(s):
     try:
@@ -173,7 +173,7 @@ def process_asm_mips(basic_blocks, func_dict, dyn_func_list, func_name):
     return res_dict
 
 
-def gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list):
+def gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list, binary_name):
     func_map = dict()
     edge_pair_list = []
     for func_addr, func_data in func_dict.items():
@@ -200,6 +200,11 @@ def gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list):
         for edge in edge_list:
             pred = asm_dict[edge[0]]
             succ = asm_dict[edge[1]]
+
+            if len(pred) == 0 or len(succ) == 0:
+                global missed_ams_count 
+                missed_ams_count  += 1
+                continue
             
             if 'mips' in arch and len(pred) > 1:
                 jmp_ins = pred[-2]
@@ -247,14 +252,16 @@ def process_all_pkl(data_dir, target_pairs_file):
         arch = pickle_data[binary_name]['arch']
         dyn_func_list = pickle_data[binary_name]['dyn_func_list']
         
-        func_map, edge_pair_list = gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list)
+        func_map, edge_pair_list = gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list, binary_name)
 
         pickle_data[binary_name]['func_map'] = func_map
 
+        print('[missed asm]', missed_ams_count)
+
         # save pairs list
-        if len(edge_pair_list) > 0:
-            with open(target_pairs_file, 'a+') as f:
-                f.writelines(edge_pair_list)
+        # if len(edge_pair_list) > 0:
+        #     with open(target_pairs_file, 'a+') as f:
+        #         f.writelines(edge_pair_list)
         
         # with open(file, 'wb') as f:
         #     pickle.dump(pickle_data, f)
@@ -266,7 +273,7 @@ def test_code():
     file_x86_2 = './extract/a2ps-4.14_clang-7.0_x86_32_O0_a2ps_extract2.pkl' # x86
     file_mips_2 = './extract/nettle-3.8.1_gcc-8.2.0_mips_64_O1_nettle-hash_extract2.pkl' # mips
 
-    file = file_arm_2
+    file = './extract/gmp-6.2.1_gcc-8.2.0_mips_64_Ofast_libgmp.so.10.4.1_extract2.pkl'
     file_name = file.split('/')[-1]
     binary_name = '_'.join(file_name.split('_')[:-1])
     pickle_data = load_pickle(file)
@@ -274,15 +281,15 @@ def test_code():
     arch = pickle_data[binary_name]['arch']
     dyn_func_list = pickle_data[binary_name]['dyn_func_list']
 
-    func_map, edge_pair_list = gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list)
+    func_map, edge_pair_list = gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list, binary_name)
 
     print("done")
 
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="print pretrain dataset.")
-    parser.add_argument("--input_path", type=str, default='mix')
+    parser = argparse.ArgumentParser(description="preprocess dataset & generate block pairs.")
+    parser.add_argument("--input_path", type=str, default='/home/liu/bcsd/train_set_extract')
     parser.add_argument("--output_path", type=str, default='/home/liu/bcsd/datasets/edge_gnn_datas/pretrain.txt')
     args = parser.parse_args()
 
@@ -290,7 +297,6 @@ if __name__ == '__main__':
     output_path = args.output_path
 
     # test_code()
-
-    input_path = './extract'
-    output_path = './test_pairs.txt'
+    # input_path = './extract'
+    # output_path = './test_pairs.txt'
     process_all_pkl(input_path, output_path)

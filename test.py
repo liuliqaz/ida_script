@@ -1,5 +1,40 @@
 import pickle
 import re
+import base64
+import capstone
+
+
+def load_pickle(file):
+    with open(file, 'rb') as f:
+        return pickle.load(f)
+
+def test_code():
+    file = './extract/gmp-6.2.1_gcc-8.2.0_mips_64_Ofast_libgmp.so.10.4.1_extract2.pkl'
+    file_name = file.split('/')[-1]
+    binary_name = '_'.join(file_name.split('_')[:-1])
+    pickle_data = load_pickle(file)
+    func_dict = pickle_data[binary_name]['func_dict']
+    arch = pickle_data[binary_name]['arch']
+    dyn_func_list = pickle_data[binary_name]['dyn_func_list']
+
+
+    func_name = '__gmpf_set_d_0'
+    target_addr = '0x11710'
+    target = func_dict[target_addr]['basic_blocks'][71504] #71504
+    target_b64_str = target['b64_bytes']
+    print(target_b64_str)
+    # target_b64_str = 'PGwgRsiBmd8QAITcAgAFJP7/AiQBELAARWsgRgn4IAMEAAKuCAAC/g=='
+    decoded_bytes = base64.b64decode(target_b64_str) 
+
+    md = capstone.Cs(capstone.CS_ARCH_MIPS, capstone.CS_MODE_MIPS64 | capstone.CS_MODE_LITTLE_ENDIAN)
+    # md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)  
+    
+    insns = md.disasm(decoded_bytes, 0x1000)
+
+    for i in insns:  
+        print(i.mnemonic, i.op_str)
+
+    print("done")
 
 
 if __name__ == '__main__':
@@ -29,10 +64,6 @@ if __name__ == '__main__':
     # with open(file_x86_2, 'rb') as f:
     #     pkl_x86_2 = pickle.load(f)
 
-    s = 'sub esp, -8'
-    reg = r'([-]?[0-9]+)'
-    match_const_dec = re.findall(reg, s, re.M | re.I)
-    if match_const_dec:
-        print('??')
+    test_code()
 
     print('done')

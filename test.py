@@ -37,6 +37,19 @@ def test_code():
     print("done")
 
 
+def rm_comman(read_file, write_file):
+    with open(read_file, 'r') as f:
+        lines = f.readlines()
+    
+    new_lines = []
+    for l in lines:
+        new_l = l.replace(',', '')
+        new_lines.append(new_l)
+    
+    with open(write_file, 'w') as f:
+        f.writelines(new_lines)
+
+
 if __name__ == '__main__':
     file_arm = './extract/a2ps-4.14_clang-7.0_arm_32_O1_a2ps_extract.pkl' # arm
     file_x86 = './extract/a2ps-4.14_clang-7.0_x86_32_O0_a2ps_extract.pkl' # x86
@@ -64,6 +77,13 @@ if __name__ == '__main__':
     # with open(file_x86_2, 'rb') as f:
     #     pkl_x86_2 = pickle.load(f)
 
-    test_code()
+    # test_code()
+
+    # rm_comman('/home/liu/bcsd/datasets/edge_gnn_datas/pretrain.txt', '/home/liu/bcsd/datasets/edge_gnn_datas/pretrain_00.txt')
+
+    read_file = '/home/liu/bcsd/datasets/edge_gnn_datas/pretrain_00.txt'
+    with open(read_file, 'r') as f:
+        lines = f.readlines(100)
+
 
     print('done')

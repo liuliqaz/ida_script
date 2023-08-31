@@ -225,6 +225,7 @@ def gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list, binary_name):
                 rela_token = '[seq]'
             edge_pair_str = ' '.join(pred) + '\t' + rela_token + '\t' + ' '.join(succ) + '\n'
             edge_pair_str = re.sub(r'jp_[0-9]*', 'jump_addr', edge_pair_str)
+            edge_pair_str = edge_pair_str.replace(',', '')
             edge_pair_list.append(edge_pair_str)
 
         
@@ -256,12 +257,10 @@ def process_all_pkl(data_dir, target_pairs_file):
 
         pickle_data[binary_name]['func_map'] = func_map
 
-        print('[missed asm]', missed_ams_count)
-
         # save pairs list
-        # if len(edge_pair_list) > 0:
-        #     with open(target_pairs_file, 'a+') as f:
-        #         f.writelines(edge_pair_list)
+        if len(edge_pair_list) > 0:
+            with open(target_pairs_file, 'a+') as f:
+                f.writelines(edge_pair_list)
         
         # with open(file, 'wb') as f:
         #     pickle.dump(pickle_data, f)
@@ -300,3 +299,5 @@ if __name__ == '__main__':
     # input_path = './extract'
     # output_path = './test_pairs.txt'
     process_all_pkl(input_path, output_path)
+
+    print('[missed asm]', missed_ams_count)

@@ -3,7 +3,11 @@ import pickle
 import os
 import re
 from tqdm import tqdm
+import json
+import pandas as pd
+import random
 
+SAVE_PATH = '/home/liu/bcsd/datasets/edge_gnn_datas/'
 
 arm_branch_opcode = ['beq', 'bne', 'bcs', 'bcc', 'bmi', 'bpl', 
                      'bvs', 'bvc', 'bhi', 'bls', 'bge', 'blt', 
@@ -16,6 +20,10 @@ mips_branch_opcode = ['j', 'jr', 'b',
                       'blt', 'bltu', 'bltz',
                       'bltzal', 'bgezal']
 missed_ams_count = 0
+rand_pair_block = 0.2
+
+def pick_rand_idx(max_len):
+    return random.randrange(max_len)
 
 def is_hexadecimal(s):
     try:
@@ -29,6 +37,17 @@ def is_hexadecimal(s):
 def load_pickle(file):
     with open(file, 'rb') as f:
         return pickle.load(f)
+
+
+def dict_save_as_json(json_dict, output_path):
+    json_str = json.dumps(json_dict)
+    with open(output_path, 'w') as f:  
+        f.write(json_str)
+
+
+def dict_save_as_csv(csv_dict, output_path):
+    df = pd.DataFrame(csv_dict)
+    df.to_csv(output_path, index=False)
 
 
 def get_all_pkl_file(data_dir):
@@ -246,6 +265,14 @@ def process_all_pkl(data_dir, target_pairs_file):
 
     pkl_file_len = len(pkl_file_list)
 
+    target_dict = dict()
+    target_dict['train'] = []
+
+    target_dict_without_rand = dict()
+    target_dict_without_rand['train'] = []
+
+    trace_idx = 0
+
     for file in tqdm(pkl_file_list):
         binary_name = '_'.join(file.split('/')[-1].split('_')[:-1])
         pickle_data = load_pickle(file)
@@ -258,12 +285,54 @@ def process_all_pkl(data_dir, target_pairs_file):
         pickle_data[binary_name]['func_map'] = func_map
 
         # save pairs list
-        if len(edge_pair_list) > 0:
-            with open(target_pairs_file, 'a+') as f:
-                f.writelines(edge_pair_list)
+        # if len(edge_pair_list) > 0:
+        #     with open(target_pairs_file, 'a+') as f:
+        #         f.writelines(edge_pair_list)
         
         # with open(file, 'wb') as f:
         #     pickle.dump(pickle_data, f)
+
+        for edge_pair in edge_pair_list:
+            nodes = edge_pair.strip().split('\t')
+            data_row = {
+                'arch': arch,
+                'rela': nodes[1],
+                'sentence1': nodes[0],
+                'sentence2': nodes[2],
+            }
+            global rand_pair_block
+            if rand_pair_block > 0 and random.random() < rand_pair_block:
+                rand_edge_idx = random.randrange(len(edge_pair_list))
+                pair_idx = random.choice([0, 2])
+                if rand_edge_idx == trace_idx:
+                    rand_edge_idx = (rand_edge_idx + 1) % len(edge_pair_list)
+                
+                rand_node = edge_pair_list[rand_edge_idx].strip().split('\t')[pair_idx]
+                data_row['rela'] = '[no_rela]'
+                data_row[pair_idx] = rand_node
+            target_dict['train'].append(data_row)
+
+            target_dict_without_rand['train'].append(
+                {
+                    'arch': arch,
+                    'sentence': ' '.join(nodes)
+                }
+            )
+
+        trace_idx += 1
+
+    target_pairs_file_csv = os.path.join(SAVE_PATH, 'pretrain_with_rand_pair.csv')
+    dict_save_as_csv(target_dict, target_pairs_file_csv)
+
+    target_pairs_file_json = os.path.join(SAVE_PATH, 'pretrain_with_rand_pair.txt')
+    dict_save_as_json(target_dict, target_pairs_file_json)
+
+    target_whole_file_csv = os.path.join(SAVE_PATH, 'pretrain_without_rand_whole.csv')
+    dict_save_as_csv(target_dict_without_rand, target_whole_file_csv)
+
+    target_whole_file_json = os.path.join(SAVE_PATH, 'pretrain_without_rand_whole.txt')
+    dict_save_as_json(target_dict_without_rand, target_whole_file_json)
+
 
 
 def test_code():

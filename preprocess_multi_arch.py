@@ -65,7 +65,15 @@ def tokenize_bracket_comma(ins_str):
     ins_str = ins_str.replace(']', ' ] ')
     ins_str = ins_str.replace('(', ' ( ')
     ins_str = ins_str.replace(')', ' ) ')
+    ins_str = ins_str.replace('{', ' { ')
+    ins_str = ins_str.replace('}', ' } ')
+    ins_str = ins_str.replace('-', ' - ')
+    ins_str = ins_str.replace(':', ' : ')
+    ins_str = ins_str.replace('!', ' ! ')
+    ins_str = ins_str.replace('*', ' * ')
+    ins_str = ins_str.replace('+', ' + ')
     ins_str = ins_str.replace(',', '')
+    ins_str = ' '.join(ins_str.strip().split())
     return ins_str
 
 
@@ -119,17 +127,18 @@ def process_asm_arm(basic_blocks, func_dict, dyn_func_list, func_name):
         res_block_asm_list = []
         for ins_str in block_asm_list:
             ins_str = tokenize_bracket_comma(ins_str)
+            ins_str = ins_str.replace('#', '')
             ins_list = ins_str.split()
             opcode = ins_list[0]
             # step1 parse brach instruction, in case  jump addr tokenized
             if opcode[0] == 'b' and opcode != 'bl'and is_hexadecimal(ins_list[-1]):
                 jmp_addr = ins_list[-1]
-                jmp_addr_dec = int(jmp_addr[1:], base=16)
+                jmp_addr_dec = int(jmp_addr, base=16)
                 res_block_asm_list.append(f'{opcode} jp_{jmp_addr_dec}')
                 continue
             # step1 parse function call (stc_link, dyn_link, func)
             if opcode == 'bl':
-                call_addr = ins_list[1][1:]
+                call_addr = ins_list[1]
                 if call_addr not in func_dict:
                     callee_func_token = 'subxxx'
                 elif func_dict[call_addr]['name'] in dyn_func_list:
@@ -140,12 +149,12 @@ def process_asm_arm(basic_blocks, func_dict, dyn_func_list, func_name):
                 continue
             # step2 parse const into specific token
             tmp_ins_str = ins_str
-            re_const_hex = r'(#0x[0-9a-fA-F]+)'
+            re_const_hex = r'(0x[0-9a-fA-F]+)'
             match_const_hex = re.findall(re_const_hex, tmp_ins_str, re.I)
             if match_const_hex:
                 hex_regex = re.compile(re_const_hex)
                 tmp_ins_str = hex_regex.sub('const_hex', tmp_ins_str)
-            re_const_dec = r'(#[0-9]+)'
+            re_const_dec = r'\b(?!r[0-9])\d+\b'
             match_const_dec = re.findall(re_const_dec, tmp_ins_str, re.I)
             if match_const_dec:
                 dec_regex = re.compile(re_const_dec)
@@ -177,10 +186,9 @@ def process_asm_mips(basic_blocks, func_dict, dyn_func_list, func_name):
                 call_addr = ins_list[1]
                 # [notion]sometimes bal is used for branch
                 if call_addr not in func_dict:
-                    if int(call_addr, base=16) in basic_blocks:
-                        res_block_asm_list.append(ins_str)
-                        continue
                     callee_func_token = 'subxxx'
+                    if int(call_addr, base=16) in basic_blocks:
+                        callee_func_token = 'jump_addr'
                 elif func_dict[call_addr]['name'] in dyn_func_list:
                     callee_func_token = 'outter_func_call'
                 else:
@@ -297,9 +305,9 @@ def process_all_pkl(data_dir, target_pairs_file):
         pickle_data[binary_name]['func_map'] = func_map
 
         # save pairs list
-        # if len(edge_pair_list) > 0:
-        #     with open(target_pairs_file, 'a+') as f:
-        #         f.writelines(edge_pair_list)
+        if len(edge_pair_list) > 0:
+            with open(target_pairs_file, 'a+') as f:
+                f.writelines(edge_pair_list)
         
         # with open(file, 'wb') as f:
         #     pickle.dump(pickle_data, f)
@@ -382,7 +390,7 @@ if __name__ == '__main__':
     output_path = args.output_path
 
     # test_code()
-    input_path = './extract'
+    # input_path = './extract'
     # output_path = './test_pairs.txt'
     process_all_pkl(input_path, output_path)
 

@@ -60,12 +60,22 @@ def get_all_pkl_file(data_dir):
     return proj_list
 
 
+def tokenize_bracket_comma(ins_str):
+    ins_str = ins_str.replace('[', ' [ ')
+    ins_str = ins_str.replace(']', ' ] ')
+    ins_str = ins_str.replace('(', ' ( ')
+    ins_str = ins_str.replace(')', ' ) ')
+    ins_str = ins_str.replace(',', '')
+    return ins_str
+
+
 def process_asm_x86(basic_blocks, func_dict, dyn_func_list, func_name):
     res_dict = dict()
     for block_addr, block_data in basic_blocks.items():
         block_asm_list = block_data['bb_disasm']
         res_block_asm_list = []
         for ins_str in block_asm_list:
+            ins_str = tokenize_bracket_comma(ins_str)
             ins_list = ins_str.split()
             opcode = ins_list[0]
             # step1 parse jmp ins and parse target addr into DEC 
@@ -108,6 +118,7 @@ def process_asm_arm(basic_blocks, func_dict, dyn_func_list, func_name):
         block_asm_list = block_data['bb_disasm']
         res_block_asm_list = []
         for ins_str in block_asm_list:
+            ins_str = tokenize_bracket_comma(ins_str)
             ins_list = ins_str.split()
             opcode = ins_list[0]
             # step1 parse brach instruction, in case  jump addr tokenized
@@ -150,6 +161,7 @@ def process_asm_mips(basic_blocks, func_dict, dyn_func_list, func_name):
         block_asm_list = block_data['bb_disasm']
         res_block_asm_list = []
         for ins_str in block_asm_list:
+            ins_str = tokenize_bracket_comma(ins_str)
             ins_list = ins_str.split()
             opcode = ins_list[0]
             # step1 parse brach instruction, for mips, some brach instructions have more than one oprand
@@ -244,7 +256,7 @@ def gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list, binary_name):
                 rela_token = '[seq]'
             edge_pair_str = ' '.join(pred) + '\t' + rela_token + '\t' + ' '.join(succ) + '\n'
             edge_pair_str = re.sub(r'jp_[0-9]*', 'jump_addr', edge_pair_str)
-            edge_pair_str = edge_pair_str.replace(',', '')
+            # edge_pair_str = edge_pair_str.replace(',', '')
             edge_pair_list.append(edge_pair_str)
 
         
@@ -297,8 +309,8 @@ def process_all_pkl(data_dir, target_pairs_file):
             data_row = {
                 'arch': arch,
                 'rela': nodes[1],
-                'sentence1': nodes[0],
-                'sentence2': nodes[2],
+                '0': nodes[0],
+                '2': nodes[2],
             }
             global rand_pair_block
             if rand_pair_block > 0 and random.random() < rand_pair_block:
@@ -309,13 +321,18 @@ def process_all_pkl(data_dir, target_pairs_file):
                 
                 rand_node = edge_pair_list[rand_edge_idx].strip().split('\t')[pair_idx]
                 data_row['rela'] = '[no_rela]'
-                data_row[pair_idx] = rand_node
+                data_row[str(pair_idx)] = rand_node
+            data_row['sep'] = len(data_row['0'].split())
+            data_row['sentence'] = data_row['0'] + ' [SEP] ' + data_row['2']
+            data_row.pop('0')
+            data_row.pop('2')
             target_dict['train'].append(data_row)
 
             target_dict_without_rand['train'].append(
                 {
                     'arch': arch,
-                    'sentence': ' '.join(nodes)
+                    'sep': len(nodes[0].split()),
+                    'sentence': ' '.join(nodes),
                 }
             )
 
@@ -365,7 +382,7 @@ if __name__ == '__main__':
     output_path = args.output_path
 
     # test_code()
-    # input_path = './extract'
+    input_path = './extract'
     # output_path = './test_pairs.txt'
     process_all_pkl(input_path, output_path)
 

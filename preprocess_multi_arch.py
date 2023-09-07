@@ -305,9 +305,9 @@ def process_all_pkl(data_dir, target_pairs_file):
         pickle_data[binary_name]['func_map'] = func_map
 
         # save pairs list
-        if len(edge_pair_list) > 0:
-            with open(target_pairs_file, 'a+') as f:
-                f.writelines(edge_pair_list)
+        # if len(edge_pair_list) > 0:
+        #     with open(target_pairs_file, 'a+') as f:
+        #         f.writelines(edge_pair_list)
         
         # with open(file, 'wb') as f:
         #     pickle.dump(pickle_data, f)
@@ -331,9 +331,9 @@ def process_all_pkl(data_dir, target_pairs_file):
                 data_row['rela'] = '[no_rela]'
                 data_row[str(pair_idx)] = rand_node
             data_row['sep'] = len(data_row['0'].split())
-            data_row['sentence'] = data_row['0'] + ' [SEP] ' + data_row['2']
-            data_row.pop('0')
-            data_row.pop('2')
+            # data_row['sentence'] = data_row['0'] + ' [SEP] ' + data_row['2']
+            # data_row.pop('0')
+            # data_row.pop('2')
             target_dict['train'].append(data_row)
 
             target_dict_without_rand['train'].append(
@@ -346,17 +346,17 @@ def process_all_pkl(data_dir, target_pairs_file):
 
         trace_idx += 1
 
-    target_pairs_file_csv = os.path.join(SAVE_PATH, 'pretrain_with_rand_pair.csv')
-    dict_save_as_csv(target_dict, target_pairs_file_csv)
+    # target_pairs_file_csv = os.path.join(SAVE_PATH, 'pretrain_with_rand_pair.csv')
+    # dict_save_as_csv(target_dict, target_pairs_file_csv)
 
-    target_pairs_file_json = os.path.join(SAVE_PATH, 'pretrain_with_rand_pair.txt')
+    target_pairs_file_json = os.path.join(SAVE_PATH, 'pretrain_with_rand_pair_sep.txt')
     dict_save_as_json(target_dict, target_pairs_file_json)
 
-    target_whole_file_csv = os.path.join(SAVE_PATH, 'pretrain_without_rand_whole.csv')
-    dict_save_as_csv(target_dict_without_rand, target_whole_file_csv)
+    # target_whole_file_csv = os.path.join(SAVE_PATH, 'pretrain_without_rand_whole.csv')
+    # dict_save_as_csv(target_dict_without_rand, target_whole_file_csv)
 
-    target_whole_file_json = os.path.join(SAVE_PATH, 'pretrain_without_rand_whole.txt')
-    dict_save_as_json(target_dict_without_rand, target_whole_file_json)
+    # target_whole_file_json = os.path.join(SAVE_PATH, 'pretrain_without_rand_whole.txt')
+    # dict_save_as_json(target_dict_without_rand, target_whole_file_json)
 
 
 

@@ -11,9 +11,10 @@ ida_path = "/home/liu/.wine/drive_c/IDA/idat64.exe"
 script_path = "/home/liu/project/ida_script/process_cap_disasm.py"
 
 # DATAROOT = "/home/liu/project/ida_script/data/"
-DATAROOT = "/home/liu/bcsd/train_set/"
 # SAVEROOT = "/home/liu/project/ida_script/extract/"
-SAVEROOT = "/home/liu/bcsd/train_set_extract/"
+
+DATAROOT = "/home/liu/bcsd/train_set/"
+SAVEROOT = "/home/liu/bcsd/train_set_extract_v2/"
 
 def getTarget(path, prefixfilter=None):
     target = []

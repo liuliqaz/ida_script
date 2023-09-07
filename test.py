@@ -2,6 +2,9 @@ import pickle
 import re
 import base64
 import capstone
+import json
+from tqdm import tqdm
+import wandb
 
 
 def load_pickle(file):
@@ -81,9 +84,10 @@ if __name__ == '__main__':
 
     # rm_comman('/home/liu/bcsd/datasets/edge_gnn_datas/pretrain.txt', '/home/liu/bcsd/datasets/edge_gnn_datas/pretrain_00.txt')
 
-    read_file = '/home/liu/bcsd/datasets/edge_gnn_datas/pretrain_00.txt'
-    with open(read_file, 'r') as f:
-        lines = f.readlines(100)
-
+    # read_file = '/home/liu/bcsd/datasets/edge_gnn_datas/pretrain_00.txt'
+    # with open(read_file, 'r') as f:
+    #     lines = f.readlines(100)
 
     print('done')
+
+    wandb.login(key='82907381b3e1440b8a77e83a83bd6a264a14c7bc')

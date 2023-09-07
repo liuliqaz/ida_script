@@ -12,11 +12,11 @@ import base64
 # import numpy as np
 import json
 
-# DATAROOT = "/home/liu/project/ida_script/data/"
 DATAROOT = "/home/liu/bcsd/train_set/"
-# SAVEROOT = "/home/liu/project/ida_script/extract/"
-SAVEROOT = "/home/liu/bcsd/train_set_extract/"
+SAVEROOT = "/home/liu/bcsd/train_set_extract_v2/"
 
+# DATAROOT = "/home/liu/project/ida_script/data/"
+# SAVEROOT = "/home/liu/project/ida_script/extract/"
 
 BasicBlock = namedtuple('BasicBlock', ['va', 'size', 'succs', 'preds'])
 
@@ -269,13 +269,15 @@ class BinaryData(Binarybase):
         output_dict[file_name]['arch'] = convert_procname_to_str(procname, bitness)
         for fva in idautils.Functions():
             try:
-                func_name = self.addr2name[fva]
+                # func_name = self.addr2name[fva]
+                func_name = idaapi.get_func_name(fva)
+                print(f'[+]func name:{func_name}')
                 func_addr_set = set([addr for addr in idautils.FuncItems(fva)])
-                if func_name == -1:
-                    func_name = idaapi.get_func_name(fva)
-                    print(f'[!]unk func name:{func_name}')
-                else:
-                    print(f'[+]func name:{func_name}')
+                # if func_name == -1:
+                #     func_name = idaapi.get_func_name(fva)
+                #     print(f'[!]unk func name:{func_name}')
+                # else:
+                #     print(f'[+]func name:{func_name}')
                 nx_graph = nx.DiGraph()
                 nodes_set, edges_set = set(), set()
                 bbs_dict = dict()

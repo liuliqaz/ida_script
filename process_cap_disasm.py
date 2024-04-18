@@ -12,11 +12,20 @@ import base64
 # import numpy as np
 import json
 
-DATAROOT = "/home/liu/bcsd/train_set/"
-SAVEROOT = "/home/liu/bcsd/train_set_extract_v2/"
+# DATAROOT = "/home/liu/bcsd/train_set/"
+# SAVEROOT = "/home/liu/bcsd/train_set_extract_v2/"
 
 # DATAROOT = "/home/liu/project/ida_script/data/"
 # SAVEROOT = "/home/liu/project/ida_script/extract/"
+
+# DATAROOT = "/home/liu/bcsd/test_set/"
+# SAVEROOT = "/home/liu/bcsd/test_set_extract_v2/"
+
+# DATAROOT = "/home/liu/bcsd/iot_elf"
+# SAVEROOT = "/home/liu/bcsd/iot_elf_extract"
+
+DATAROOT = "/home/liu/project/rtime_elf"
+SAVEROOT = "/home/liu/project/rt_ext"
 
 BasicBlock = namedtuple('BasicBlock', ['va', 'size', 'succs', 'preds'])
 
@@ -354,8 +363,9 @@ if __name__ == '__main__':
 
     binary_abs_path = idc.get_input_file_path()
     file_name = binary_abs_path.split('\\')[-1]
-    proj_name = file_name.split('-')[0]
-    file_path = os.path.join(DATAROOT, proj_name, file_name)
+    # proj_name = file_name.split('-')[0] # train_data
+    # file_path = os.path.join(DATAROOT, proj_name, file_name) # train_data
+    file_path = os.path.join(DATAROOT, file_name)
     idc.auto_wait()
 
     print(f'[DATAROOT]{DATAROOT}')

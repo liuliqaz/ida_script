@@ -5,6 +5,7 @@ import capstone
 import json
 from tqdm import tqdm
 import wandb
+import random
 
 
 def load_pickle(file):
@@ -62,6 +63,20 @@ if __name__ == '__main__':
     file_x86_2 = './extract/a2ps-4.14_clang-7.0_x86_32_O0_a2ps_extract2.pkl' # x86
     file_mips_2 = './extract/nettle-3.8.1_gcc-8.2.0_mips_64_O1_nettle-hash_extract2.pkl' # mips
 
+
+    # hex_str = 'PH8ARqf/HEVoAb/f'
+    # target_b64_str = 'PGwgRsiBmd8QAITcAgAFJP7/AiQBELAARWsgRgn4IAMEAAKuCAAC/g=='
+    # decoded_bytes = base64.b64decode(target_b64_str) 
+    # decoded_bytes = str(decoded_bytes)
+
+    # md = capstone.Cs(capstone.CS_ARCH_MIPS, capstone.CS_MODE_MIPS64 | capstone.CS_MODE_LITTLE_ENDIAN)
+    # insns = md.disasm(decoded_bytes, 0x1000)
+    # for i in insns:  
+    #     print(i.mnemonic, i.op_str)
+
+    test_code()
+
+
     # with open(file_arm, 'rb') as f:
     #     pkl_arm = pickle.load(f)
 
@@ -88,6 +103,13 @@ if __name__ == '__main__':
     # with open(read_file, 'r') as f:
     #     lines = f.readlines(100)
 
+
+    # read_file = '/home/liu/bcsd/datasets/edge_gnn_datas/pretrain_sep_without_clang64.txt'
+    # with open(read_file, 'r') as f:
+    #     json_str = f.read()
+    # parse_json = json.loads(json_str)
+    # data_list = parse_json['train']
+
     print('done')
 
-    wandb.login(key='82907381b3e1440b8a77e83a83bd6a264a14c7bc')
+    # wandb.login(key='82907381b3e1440b8a77e83a83bd6a264a14c7bc')

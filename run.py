@@ -13,8 +13,18 @@ script_path = "/home/liu/project/ida_script/process_cap_disasm.py"
 # DATAROOT = "/home/liu/project/ida_script/data/"
 # SAVEROOT = "/home/liu/project/ida_script/extract/"
 
-DATAROOT = "/home/liu/bcsd/train_set/"
-SAVEROOT = "/home/liu/bcsd/train_set_extract_v2/"
+# DATAROOT = "/home/liu/bcsd/train_set/"
+# SAVEROOT = "/home/liu/bcsd/train_set_extract_v2/"
+
+# DATAROOT = "/home/liu/bcsd/test_set/"
+# SAVEROOT = "/home/liu/bcsd/test_set_extract_v2/"
+
+# DATAROOT = "/home/liu/bcsd/iot_elf"
+# SAVEROOT = "/home/liu/bcsd/iot_elf_extract"
+
+DATAROOT = "/home/liu/project/rtime_elf"
+SAVEROOT = "/home/liu/project/rt_ext"
+
 
 def getTarget(path, prefixfilter=None):
     target = []

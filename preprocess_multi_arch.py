@@ -8,6 +8,8 @@ import pandas as pd
 import random
 
 SAVE_PATH = '/home/liu/bcsd/datasets/edge_gnn_datas/'
+FILTER_CLANG = True
+FILTER_64 = True
 
 arm_branch_opcode = ['beq', 'bne', 'bcs', 'bcc', 'bmi', 'bpl', 
                      'bvs', 'bvc', 'bhi', 'bls', 'bge', 'blt', 
@@ -280,7 +282,7 @@ def gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list, binary_name):
     return func_map, edge_pair_list
 
 
-def process_all_pkl(data_dir, target_pairs_file):
+def process_all_pkl(data_dir, target_write_file):
     pkl_file_list = get_all_pkl_file(data_dir)
 
     pkl_file_len = len(pkl_file_list)
@@ -295,6 +297,12 @@ def process_all_pkl(data_dir, target_pairs_file):
 
     for file in tqdm(pkl_file_list):
         binary_name = '_'.join(file.split('/')[-1].split('_')[:-1])
+
+        if FILTER_CLANG and 'clang' in binary_name.split('_')[1]:
+            continue
+        if FILTER_64 and binary_name.split('_')[-3] == '64':
+            continue
+
         pickle_data = load_pickle(file)
         func_dict = pickle_data[binary_name]['func_dict']
         arch = pickle_data[binary_name]['arch']
@@ -303,14 +311,6 @@ def process_all_pkl(data_dir, target_pairs_file):
         func_map, edge_pair_list = gen_block_pair_for_pretrain(arch, func_dict, dyn_func_list, binary_name)
 
         pickle_data[binary_name]['func_map'] = func_map
-
-        # save pairs list
-        # if len(edge_pair_list) > 0:
-        #     with open(target_pairs_file, 'a+') as f:
-        #         f.writelines(edge_pair_list)
-        
-        # with open(file, 'wb') as f:
-        #     pickle.dump(pickle_data, f)
 
         for edge_pair in edge_pair_list:
             nodes = edge_pair.strip().split('\t')
@@ -349,7 +349,7 @@ def process_all_pkl(data_dir, target_pairs_file):
     # target_pairs_file_csv = os.path.join(SAVE_PATH, 'pretrain_with_rand_pair.csv')
     # dict_save_as_csv(target_dict, target_pairs_file_csv)
 
-    target_pairs_file_json = os.path.join(SAVE_PATH, 'pretrain_with_rand_pair_sep.txt')
+    target_pairs_file_json = os.path.join(SAVE_PATH, target_write_file)
     dict_save_as_json(target_dict, target_pairs_file_json)
 
     # target_whole_file_csv = os.path.join(SAVE_PATH, 'pretrain_without_rand_whole.csv')
@@ -391,7 +391,7 @@ if __name__ == '__main__':
 
     # test_code()
     # input_path = './extract'
-    # output_path = './test_pairs.txt'
+    output_path = 'pretrain_sep_without_clang64.txt'
     process_all_pkl(input_path, output_path)
 
     print('[missed asm]', missed_ams_count)
